@@ -1,0 +1,28 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Deploy app
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.IP }} '
+            cd ${{ secrets.PATH }} &&
+            git pull &&
+            docker build -t ${{ secrets.NAME }} . &&
+            docker stop ${{ secrets.NAME }} || true &&
+            docker rm ${{ secrets.NAME }} || true &&
+            docker run --network=host -d --name ${{ secrets.NAME }} --env-file .env ${{ secrets.NAME }}
+          '
