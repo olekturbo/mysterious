@@ -4,7 +4,13 @@ import "net/http"
 
 const idCookie = "userId"
 
-func readCookie(r *http.Request, name string) (string, error) {
+type CookieManager struct{}
+
+func NewCookieManager() *CookieManager {
+	return &CookieManager{}
+}
+
+func (c *CookieManager) Read(r *http.Request, name string) (string, error) {
 	cookie, err := r.Cookie(name)
 	if err != nil {
 		return "", err
@@ -13,7 +19,7 @@ func readCookie(r *http.Request, name string) (string, error) {
 	return cookie.Value, nil
 }
 
-func setCookie(w http.ResponseWriter, name, value string) {
+func (c *CookieManager) Write(w http.ResponseWriter, name, value string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    value,

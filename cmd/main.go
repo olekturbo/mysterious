@@ -9,6 +9,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/olekturbo/mysterious/internal/api"
 	"github.com/olekturbo/mysterious/internal/cache"
+	"github.com/olekturbo/mysterious/internal/service"
 )
 
 type Config struct {
@@ -31,11 +32,11 @@ func main() {
 	}
 
 	handler := api.NewHandler(
-		api.NewService(
-			cache.NewRedis(cfg.Redis.Addr, cfg.Redis.Password),
+		service.NewID(),
+		service.NewCache(cache.NewRedis(cfg.Redis.Addr, cfg.Redis.Password),
 			cfg.Limit,
-			cfg.Exp,
-		),
+			cfg.Exp),
+		api.NewCookieManager(),
 	)
 
 	router := chi.NewRouter()

@@ -3,27 +3,36 @@ package api
 import (
 	"errors"
 	"net/http"
+
+	"github.com/olekturbo/mysterious/internal/service"
 )
 
 type Handler struct {
-	service *Service
+	idService     *service.ID
+	cacheService  *service.Cache
+	cookieManager *CookieManager
 }
 
-func NewHandler(service *Service) *Handler {
+func NewHandler(idService *service.ID, cacheService *service.Cache, cookieManager *CookieManager) *Handler {
 	return &Handler{
-		service: service,
+		idService:     idService,
+		cacheService:  cacheService,
+		cookieManager: NewCookieManager(),
 	}
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	id, err := readCookie(r, idCookie)
+	id, err := h.cookieManager.Read(r, idCookie)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
-			setCookie(w, idCookie, h.service.GenerateID())
+			h.cookieManager.Write(w, idCookie, h.idService.GenerateID())
+		} else {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 	}
 
-	err = h.service.Limit(r.Context(), id)
+	err = h.cacheService.Limit(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusTooManyRequests)
 		return
