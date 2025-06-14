@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kelseyhightower/envconfig"
@@ -13,6 +14,8 @@ import (
 type Config struct {
 	Port  string
 	Redis Redis
+	Limit int64
+	Exp   time.Duration
 }
 
 type Redis struct {
@@ -30,6 +33,8 @@ func main() {
 	handler := api.NewHandler(
 		api.NewService(
 			cache.NewRedis(cfg.Redis.Addr, cfg.Redis.Password),
+			cfg.Limit,
+			cfg.Exp,
 		),
 	)
 
