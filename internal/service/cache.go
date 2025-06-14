@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -29,6 +30,8 @@ func NewCache(cache cache, limit int64, exp time.Duration) *Cache {
 }
 
 func (c *Cache) Limit(ctx context.Context, key string) error {
+	key = fmt.Sprintf("limit:%s", key)
+
 	val, err := c.cache.Get(ctx, key)
 	if err != nil {
 		return err
