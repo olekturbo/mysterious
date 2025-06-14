@@ -25,7 +25,10 @@ type Handler struct {
 }
 
 func (h *Handler) Hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, h.s)
+	_, err := fmt.Fprintln(w, h.s)
+	if err != nil {
+		return
+	}
 }
 
 func main() {
@@ -56,5 +59,8 @@ func main() {
 
 	port := fmt.Sprintf(":%s", cfg.Port)
 	fmt.Printf("Server starting at %s", port)
-	http.ListenAndServe(port, nil)
+	err = http.ListenAndServe(port, nil)
+	if err != nil {
+		panic(err)
+	}
 }

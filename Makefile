@@ -16,3 +16,6 @@ restart: down up
 
 build-app:
 	CGO_ENABLED=0 go build -o app .
+
+lint:
+	golangci-lint run
