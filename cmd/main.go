@@ -1,12 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/olekturbo/mysterious/internal/api"
 	"github.com/olekturbo/mysterious/internal/cache"
 )
 
@@ -20,17 +19,6 @@ type Redis struct {
 	Password string
 }
 
-type Handler struct {
-	s string
-}
-
-func (h *Handler) Hello(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintln(w, h.s)
-	if err != nil {
-		return
-	}
-}
-
 func main() {
 	var cfg Config
 	err := envconfig.Process("", &cfg)
@@ -38,24 +26,13 @@ func main() {
 		panic(err)
 	}
 
-	id := uuid.NewString()
+	handler := api.NewHandler(
+		api.NewService(
+			cache.NewRedis(cfg.Redis.Addr, cfg.Redis.Password),
+		),
+	)
 
-	redisCache := cache.NewRedis(cfg.Redis.Addr, cfg.Redis.Password)
-	err = redisCache.Set(context.TODO(), id, "Hello!")
-	if err != nil {
-		panic(err)
-	}
-
-	received, err := redisCache.Get(context.Background(), id)
-	if err != nil {
-		panic(err)
-	}
-
-	handler := Handler{
-		s: received,
-	}
-
-	http.HandleFunc("/", handler.Hello)
+	http.HandleFunc("/", handler.Home)
 
 	port := fmt.Sprintf(":%s", cfg.Port)
 	fmt.Printf("Server starting at %s", port)
