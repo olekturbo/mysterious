@@ -49,7 +49,7 @@ func (s *Service) Limit(ctx context.Context, key string) error {
 		return err
 	}
 
-	if rate > s.limit {
+	if rate >= s.limit {
 		return ErrLimitReached
 	}
 
