@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/olekturbo/mysterious/internal/api"
 	"github.com/olekturbo/mysterious/internal/cache"
@@ -32,11 +33,10 @@ func main() {
 		),
 	)
 
-	http.HandleFunc("/", handler.Home)
+	router := chi.NewRouter()
+	router.Get("/", handler.Home)
 
-	port := fmt.Sprintf(":%s", cfg.Port)
-	fmt.Printf("Server starting at %s", port)
-	err = http.ListenAndServe(port, nil)
+	err = http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), router)
 	if err != nil {
 		panic(err)
 	}
