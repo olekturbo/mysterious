@@ -30,6 +30,7 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 
 			setCookie(w, idCookie, newId)
 			_, _ = w.Write([]byte(newId))
+			return
 		}
 	}
 
