@@ -15,7 +15,7 @@ logs:
 restart: down up
 
 build-app:
-	CGO_ENABLED=0 go build -o app .
+	CGO_ENABLED=0 go build -o app ./cmd
 
 lint:
 	golangci-lint run
