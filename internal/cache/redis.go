@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -23,7 +24,7 @@ func NewRedis(addr, password string) *Redis {
 }
 
 func (r *Redis) Get(ctx context.Context, key string) (string, error) {
-	res, err := r.client.Get(ctx, key).Result()
+	res, err := r.client.Get(ctx, r.Key(key)).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return "", nil
@@ -34,9 +35,13 @@ func (r *Redis) Get(ctx context.Context, key string) (string, error) {
 }
 
 func (r *Redis) Set(ctx context.Context, key, value string, exp time.Duration) error {
-	return r.client.Set(ctx, key, value, exp).Err()
+	return r.client.Set(ctx, r.Key(key), value, exp).Err()
 }
 
 func (r *Redis) Incr(ctx context.Context, key string) (int64, error) {
-	return r.client.Incr(ctx, key).Result()
+	return r.client.Incr(ctx, r.Key(key)).Result()
+}
+
+func (r *Redis) Key(s string) string {
+	return fmt.Sprintf("limit:%s", s)
 }
