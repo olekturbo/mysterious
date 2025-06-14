@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -21,7 +22,14 @@ func NewRedis(addr, password string) *Redis {
 }
 
 func (r *Redis) Get(ctx context.Context, key string) (string, error) {
-	return r.client.Get(ctx, key).Result()
+	res, err := r.client.Get(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", nil
+		}
+		return "", err
+	}
+	return res, nil
 }
 
 func (r *Redis) Set(ctx context.Context, key, value string) error {
