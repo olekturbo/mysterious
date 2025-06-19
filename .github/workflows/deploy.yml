@@ -1,0 +1,81 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_trainer:
+        description: 'Deploy trainer app?'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Build Go binary
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o mysterious ./cmd
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mysterious-binary
+          path: mysterious
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download built binary
+        uses: actions/download-artifact@v4
+        with:
+          name: mysterious-binary
+
+      - name: Upload entire repo to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."
+          target: "${{ secrets.PATH }}"
+
+      - name: SSH and deploy on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PATH }}
+            docker build -f deploy.Dockerfile -t ${{ secrets.NAME }} .
+            docker stop ${{ secrets.NAME }} || true
+            docker rm ${{ secrets.NAME }} || true
+            docker run --network=host -d --name ${{ secrets.NAME }} --env-file .env ${{ secrets.NAME }}
+
+      - name: Deploy trainer app (optional)
+        if: ${{ github.event.inputs.deploy_trainer == 'true' }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PATH }}/trainer
+            docker build -t ${{ secrets.TRAINER_NAME }} .
+            docker stop ${{ secrets.TRAINER_NAME }} || true
+            docker rm ${{ secrets.TRAINER_NAME }} || true
+            docker run --network=host -d --name ${{ secrets.TRAINER_NAME }} ${{ secrets.TRAINER_NAME }}

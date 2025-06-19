@@ -1,0 +1,177 @@
+basePath: /
+definitions:
+  api.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  api.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  api.PredictRequest:
+    properties:
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  api.PredictResponse:
+    properties:
+      result:
+        type: string
+    type: object
+  api.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+info:
+  contact: {}
+  title: Mysterious API
+  version: "1.0"
+paths:
+  /:
+    get:
+      description: Checks cookie and rate limits
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "429":
+          description: Too many requests
+          schema:
+            type: string
+      summary: Home endpoint
+      tags:
+      - general
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: Login payload
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Auth token
+          schema:
+            $ref: '#/definitions/api.LoginResponse'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      summary: Log in user
+      tags:
+      - auth
+  /predict:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a JSON payload with text input and returns a prediction
+        result
+      parameters:
+      - description: Input text for prediction
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.PredictRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PredictResponse'
+        "400":
+          description: Invalid input
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Predict result from input text
+      tags:
+      - prediction
+  /private:
+    get:
+      description: Accessible only with valid JWT
+      responses:
+        "200":
+          description: Welcome <user_id>
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Private home endpoint
+      tags:
+      - private
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with email and password
+      parameters:
+      - description: Register payload
+        in: body
+        name: registerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+      summary: Register new user
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

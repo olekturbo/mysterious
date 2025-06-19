@@ -1,0 +1,6 @@
+.idea
+trainer/*.csv
+trainer/*.pkl
+/tmp/*
+!tmp/.gitkeep
+/app
