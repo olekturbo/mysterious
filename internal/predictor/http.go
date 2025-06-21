@@ -14,6 +14,10 @@ type HTTP struct {
 	url    string
 }
 
+type Payload struct {
+	Message string `json:"message"`
+}
+
 type Response struct {
 	Result string `json:"result"`
 }
@@ -26,8 +30,8 @@ func NewHTTP(client *http.Client, url string) *HTTP {
 }
 
 func (h *HTTP) Predict(ctx context.Context, text string) (string, error) {
-	payload := map[string]string{
-		"message": text,
+	payload := Payload{
+		Message: text,
 	}
 
 	body, err := json.Marshal(payload)
