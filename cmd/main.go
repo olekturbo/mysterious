@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/olekturbo/mysterious/docs"
 	"github.com/olekturbo/mysterious/internal/api"
@@ -80,7 +81,7 @@ func main() {
 	router.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	router.Route("/private", func(r chi.Router) {
-		tokenAuth := jwtauth.New("HS256", []byte(cfg.Token.Key), nil)
+		tokenAuth := jwtauth.New(jwt.SigningMethodHS256.Alg(), []byte(cfg.Token.Key), nil)
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
 
